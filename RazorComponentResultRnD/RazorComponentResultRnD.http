@@ -1,0 +1,6 @@
+@RazorComponentResultRnD_HostAddress = http://localhost:5008
+
+GET {{RazorComponentResultRnD_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
