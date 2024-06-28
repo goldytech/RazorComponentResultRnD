@@ -1,0 +1,20 @@
+<div class="card mb-3">
+<div class="card-body">
+    <ToDoItemComponent Model="@Model"></ToDoItemComponent>
+    <p class="card-text">@Model.Name</p>
+    @if (Model.IsCompleted)
+    {
+        <input type="checkbox" checked hx-post="/todos/@Model.Id/toggle" hx-target="closest div" hx-swap="outerHTML" class="form-check-input"/>
+    }
+    else
+    {
+        <input type="checkbox" hx-post="/todos/@Model.Id/toggle" hx-target="closest div" hx-swap="outerHTML" class="form-check-input"/>
+    }
+    <button hx-delete="/todos/@Model.Id" hx-target="closest div" hx-swap="outerHTML" class="btn btn-danger">X</button>
+
+</div>
+</div>
+@code {
+    [Parameter]
+    public TodoItem Model { get; set; } = new();
+}

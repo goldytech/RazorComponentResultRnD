@@ -1,45 +1,46 @@
+using Microsoft.AspNetCore.Http.HttpResults;
+using RazorComponentResultRnD;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
 builder.Services.AddRazorComponents();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
+var db = new List<TodoItem>()
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    new TodoItem() { Id = 1, Name = "abc", IsCompleted = true },
+    new TodoItem() { Id = 2, Name = "123", IsCompleted = false },
 };
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
-
-
+app.MapGet("/", () => new RazorComponentResult<DocumentComponent>());
+app.MapGet("/todos", () => new RazorComponentResult<TodoItemListComponent>(new { Model = db }));
+app.MapPost("/todos/{id}/toggle", (string id) =>
+{
+    var todo = db.First(t => t.Id.ToString() == id);
+    todo.IsCompleted = !todo.IsCompleted;
+    return new RazorComponentResult<ToDoItemComponent>(new { Model = todo });
+});
+app.MapDelete("/todos/{id}", (string id) =>
+{
+    var todo = db.First(t => t.Id.ToString() == id);
+    db.Remove(todo);
+});
+app.MapPost("/todos", (AddToDoCommand command) =>
+{
+    var todo = new TodoItem { Id = db.Max(x =>x.Id) + 1, Name = command.Name, IsCompleted = false };
+    db.Add(todo);
+    return new RazorComponentResult<ToDoItemComponent>(new { Model = todo });
+});
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+public record AddToDoCommand
+{
+    public string Name { get; set; }
 }
